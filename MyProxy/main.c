@@ -5,7 +5,9 @@
 int get_int(char string[], int error);
 
 int main(int argc, char* argv[]) {
+  char buffer[BUFF_SIZE];
   int port;
+  // Arguments checks
   if(argc < 2) {
     printf("Missing port number. Usage : %s port\n", argv[0]);
     return -1;
@@ -16,7 +18,24 @@ int main(int argc, char* argv[]) {
       return -2;
     }
   }
-  printf("Starting proxy on port %d.\n", port);
+  // Initiating socket
+  int tcp_socket = init_socket(port);
+  printf("Server proxy listening on port %d.\n", port);
+  // Accept clients connections
+  int client_socket;
+  struct sockaddr_in client_address;
+  while(1) {
+    client_socket = accept(tcp_socket, (struct sockaddr *) &client_address, sizeof(client_address));
+    if (client_socket == -1) {
+      printf("Error accepting first client.\n");
+      continue;
+    }
+    printf("%s connecté avec succès.\n", inet_ntoa(clientAddress.sin_addr));
+    close(client_socket);
+  }
+
+  close(tcp_socket);
+
   return 0;
 }
 
