@@ -24,13 +24,14 @@ int main(int argc, char* argv[]) {
   // Accept clients connections
   int client_socket;
   struct sockaddr_in client_address;
+  int client_address_size = sizeof client_address;
   while(1) {
     client_socket = accept(tcp_socket, (struct sockaddr *) &client_address, sizeof(client_address));
     if (client_socket == -1) {
       printf("Error accepting first client.\n");
       continue;
     }
-    printf("%s connecté avec succès.\n", inet_ntoa(clientAddress.sin_addr));
+    printf("%s connecté avec succès.\n", inet_ntoa(client_address.sin_addr));
     close(client_socket);
   }
 
