@@ -33,7 +33,7 @@ int main(int argc, char* argv[]) {
   int client_socket;
   struct sockaddr_in client_address;
   int client_address_size = sizeof(client_address);
-  //int client_address_size = sizeof client_address;
+  
   while(1) {
     client_socket = accept(tcp_socket, (struct sockaddr *) &client_address, &client_address_size);
     if (client_socket == -1) {
@@ -41,12 +41,7 @@ int main(int argc, char* argv[]) {
       continue;
     }
     printf("Connection accepted from %d.%d.%d.%d:%d\n", client_address.sin_addr.s_addr/(256*256*256)%256, client_address.sin_addr.s_addr/(256*256)%256, client_address.sin_addr.s_addr/(256)%256, client_address.sin_addr.s_addr%256, client_address.sin_port%65536);
-    if(((struct sockaddr*)&client_address)->sa_family == AF_INET) {
-      printf("Internet IPv4 address.\n");
-    }
     
-    int addr = client_address.sin_addr.s_addr;
-    printf("Client connected from %d.%d.%d.%d:%d.\n", addr/(256*256*256), addr/(256*256)%256, addr/256%256, addr%256, client_address.sin_port);
     close(client_socket);
   }
 
