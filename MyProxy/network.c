@@ -1,7 +1,18 @@
 
 
+#include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <ctype.h>
+#include <string.h>
+#include <netdb.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
+
+#include "network.h"
+
 int init_socket(int port) {
-  int tcp_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP); // IPv4 TCP Socket
+  int tcp_socket = socket(AF_INET, SOCK_STREAM, 0); // IPv4 TCP Socket
   if(tcp_socket == -1) {
     printf("Error opening socket.\n");
     return -1;
