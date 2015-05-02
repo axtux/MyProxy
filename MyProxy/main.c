@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <sys/socket.h>
 //#include <stdlib.h>
 #include "network.h"
 
@@ -24,7 +25,6 @@ int main(int argc, char* argv[]) {
   // Accept clients connections
   int client_socket;
   struct sockaddr_in client_address;
-  int client_address_size = sizeof client_address;
   while(1) {
     client_socket = accept(tcp_socket, (struct sockaddr *) &client_address, sizeof(client_address));
     if (client_socket == -1) {
