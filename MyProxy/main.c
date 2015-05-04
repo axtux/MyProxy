@@ -1,4 +1,5 @@
 #include <stdio.h>
+//#include <stdlib.h>
 #include "network.h"
 
 
@@ -10,10 +11,11 @@
 #include <netinet/in.h>
 #include <netdb.h> 
 
-int get_int(char string[], int error);
 
+//int get_int(char string[], int error);
+void *connection_handler(void *);
 int main(int argc, char* argv[]) {
-  char buffer[BUFF_SIZE];
+
   int port;
   // Arguments checks
   if(argc < 2) {
@@ -30,37 +32,75 @@ int main(int argc, char* argv[]) {
   int tcp_socket = init_socket(port);
   printf("Server proxy listening on port %d.\n", port);
   // Accept clients connections
-  int client_socket;
-  struct sockaddr_in client_address;
-  int client_address_size = sizeof(client_address);
-  
+  int client_socket, *new_sock;
+  struct sockaddr_in client_address= { 0 };
+  int client_address_size = sizeof client_address;
   while(1) {
-    client_socket = accept(tcp_socket, (struct sockaddr *) &client_address, &client_address_size);
-    if (client_socket == -1) {
-      printf("Error accepting first client.\n");
-      continue;
+    	  client_socket = accept(tcp_socket, (struct sockaddr *) &client_address, &client_address_size);
+   	  if (client_socket == -1) {
+     	     printf("Error accepting client.\n");
+      	     continue;
+  	   }
+	   pthread_t sniffer_thread;
+	   new_sock = malloc(1);
+           *new_sock = client_socket;
+	  
+	  printf("client connecté avec succès.\n");
+          printf("Connection accepted from %d.%d.%d.%d:%d\n", client_address.sin_addr.s_addr/(256*256*256)%256, client_address.sin_addr.s_addr/(256*256)%256, client_address.sin_addr.s_addr/(256)%256, client_address.sin_addr.s_addr%256, client_address.sin_port%65536);
+
+	   
+        if( pthread_create( &sniffer_thread , NULL ,  connection_handler , (void*) new_sock) < 0)
+        {
+            perror("could not create thread");
+            return 1;
+        }
+         
     }
-    printf("Connection accepted from %d.%d.%d.%d:%d\n", client_address.sin_addr.s_addr/(256*256*256)%256, client_address.sin_addr.s_addr/(256*256)%256, client_address.sin_addr.s_addr/(256)%256, client_address.sin_addr.s_addr%256, client_address.sin_port%65536);
-    
-    close(client_socket);
-  }
-
-  close(tcp_socket);
-
+    //close(client_socket);
+    close(tcp_socket);
   return 0;
 }
 
-int get_int(char string[], int error) {
-  int result = 0, i = 0;
-  while(string[i] != '\0') {
-    if(string[i] < '0' || string [i] > '9') {
-      return error;
-    } else {
-      result = 10*result+string[i]-'0';
-      ++i;
-    }
-  }
-  return result;
-}
 
+void *connection_handler(void *socket_desc)
+{
+    //Get the socket descriptor
+    int sock = *(int*)socket_desc;
+    int read_size;
+    char *message , client_message[BUFF_SIZE];
+     
+    //Send some messages to the client
+    message = "You are connected\n";
+    //write(sock , message , strlen(message));
+     
+    //message = "Now type something and i shall repeat what you type \n";
+    //write(sock , message , strlen(message));
+     
+    //Receive a message from client
+    while( (read_size = recv(sock , client_message , BUFF_SIZE , 0)) > 0 )
+    {
+        //end of string marker
+		client_message[read_size] = '\0';
+		
+		//Send the message back to client
+        send(sock , client_message , strlen(client_message), 0);
+	//send(adrFamille, message, BUFF_SIZE, 0);
+		
+		//clear the message buffer
+      		//client_message[BUFF_SIZE];
+		memset(client_message, '\0', BUFF_SIZE);
+    }
+     
+    if(read_size == 0)
+    {
+        puts("Client disconnected");
+        fflush(stdout);
+    }
+    else if(read_size == -1)
+    {
+        perror("recv failed");
+    }
+         
+    return ;
+} 
 
