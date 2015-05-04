@@ -19,6 +19,47 @@ char* str_addr(struct sockaddr_in address) {
   return r;
 }
 
+
+char* getdate(char *filname){
+	struct stat *buf;
+	char buff[100];
+	buf = malloc(sizeof(struct stat));
+	time_t date;
+	stat( filename, buf );
+	date = buf->st_mtime;
+	struct tm temps = *localtime(&date);
+	printf("%lld\n", (long long)buf->st_mtime );
+	strftime(buff, 100, "%a. %d %B %Y %X", &temps);
+	free(buf);
+	return buff;
+}
+
+void ecrireFichier(char texte[], char nom[]){
+	FILE* fichier = NULL;
+	fichier = fopen(nom, "w");
+	if (fichier != NULL)
+	{
+		fputs(texte, fichier);
+		fclose(fichier);
+	}
+	return;
+}
+
+int lireFichier(char nom[], char message[]){ //modifie message
+	FILE* fichier = NULL;
+	fichier = fopen(nom, "r");
+	if (fichier == NULL){
+		printf("fichier inexistant\n");
+		return -1;
+	}
+	
+	fgets(message, MAXSIZE, fichier);
+	return 1;
+	
+}
+
+
+
 char* cache_name(char* host, char* uri) {
   int size = 0;
   int i = 0;
@@ -27,4 +68,6 @@ char* cache_name(char* host, char* uri) {
     
   }
 }
+
+
 
