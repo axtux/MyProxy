@@ -36,70 +36,54 @@ int main(int argc, char* argv[]) {
   struct sockaddr_in client_address= { 0 };
   int client_address_size = sizeof client_address;
   while(1) {
-    	  client_socket = accept(tcp_socket, (struct sockaddr *) &client_address, &client_address_size);
-   	  if (client_socket == -1) {
-     	     printf("Error accepting client.\n");
-      	     continue;
-  	   }
-	   pthread_t sniffer_thread;
-	   new_sock = malloc(1);
-           *new_sock = client_socket;
-	  
-	  printf("client connecté avec succès.\n");
-          printf("Connection accepted from %d.%d.%d.%d:%d\n", client_address.sin_addr.s_addr/(256*256*256)%256, client_address.sin_addr.s_addr/(256*256)%256, client_address.sin_addr.s_addr/(256)%256, client_address.sin_addr.s_addr%256, client_address.sin_port%65536);
-
-	   
-        if( pthread_create( &sniffer_thread , NULL ,  connection_handler , (void*) new_sock) < 0)
-        {
-            perror("could not create thread");
-            return 1;
-        }
-         
+    client_socket = accept(tcp_socket, (struct sockaddr *) &client_address, &client_address_size);
+    if (client_socket == -1) {
+       printf("Error accepting client.\n");
+       return -3;
     }
-    //close(client_socket);
-    close(tcp_socket);
+    pthread_t sniffer_thread;
+    
+    printf("Connection accepted from %d.%d.%d.%d:%d\n", client_address.sin_addr.s_addr/(256*256*256)%256, client_address.sin_addr.s_addr/(256*256)%256, client_address.sin_addr.s_addr/(256)%256, client_address.sin_addr.s_addr%256, client_address.sin_port%65536);
+    if(pthread_create(&sniffer_thread, NULL,  connection_handler, (void*) &client_socket) != 0) {
+        perror("could not create thread");
+        return -4;
+    }
+  }
+  close(tcp_socket);
   return 0;
 }
 
 
-void connection_handler(void *socket_desc) {
-    //Get the socket descriptor
-    int sock = *(int*)socket_desc;
-    int read_size;
-    char *message , client_message[BUFF_SIZE+1];
-     
-    //Send some messages to the client
-    message = "You are connected\n";
-    //write(sock , message , strlen(message));
-     
-    //message = "Now type something and i shall repeat what you type \n";
-    //write(sock , message , strlen(message));
-     
-    //Receive a message from client
-    while( (read_size = recv(sock , client_message , BUFF_SIZE , 0)) > 0 )
-    {
-        //end of string marker
-		client_message[read_size] = '\0';
-		
-		//Send the message back to client
-        send(sock , client_message , strlen(client_message), 0);
-	//send(adrFamille, message, BUFF_SIZE, 0);
-		
-		//clear the message buffer
-      		//client_message[BUFF_SIZE];
-		memset(client_message, '\0', BUFF_SIZE);
-    }
-     
-    if(read_size == 0)
-    {
-        puts("Client disconnected");
-        fflush(stdout);
-    }
-    else if(read_size == -1)
-    {
-        perror("recv failed");
-    }
-         
-    return ;
+void connection_handler(void *socket) {
+  int sock = *(int*)socket;
+  int read_size;
+  char *message, client_message[BUFF_SIZE+1];
+   
+  //Send some messages to the client
+  message = "You are connected\n";
+   
+  //Receive a message from client
+  do {
+    read_size = recv(sock, client_message, BUFF_SIZE, 0);
+	  client_message[read_size] = '\0';
+	
+	  //Send the message back to client
+    send(sock , client_message , read_size, 0);
+	
+	  //clear the message buffer
+	  //memset(client_message, '\0', BUFF_SIZE);
+  } while(read_size > 0);
+  
+  printf("Connection closed by cient\n");
+  close(sock);
 } 
+
+char* cache_name(char* host, char* uri) {
+  int size = 0;
+  int i = 0;
+  
+  while(host[i] != '\0') {
+    
+  }
+}
 
