@@ -1,9 +1,0 @@
-# depslib dependency file v1.0
-1430569195 source:c:\users\axtux\documents\github\myproxy\myproxy\main.c
-	<stdio.h>
-	"network.h"
-
-1430568967 source:c:\users\axtux\documents\github\myproxy\myproxy\network.c
-
-1430569235 c:\users\axtux\documents\github\myproxy\myproxy\network.h
-
