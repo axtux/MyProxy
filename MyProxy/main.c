@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
   while(1) {
     client_socket = accept(tcp_socket, (struct sockaddr *) &client_address, &client_address_size);
     if (client_socket == -1) {
-       printf("Error accepting client.\n");
+       printf("Error accepting client.\nMake sure port %d is not in use.\n", port);
        return -3;
     }
     pthread_t sniffer_thread;
