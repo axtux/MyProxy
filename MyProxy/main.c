@@ -13,7 +13,7 @@
 
 
 //int get_int(char string[], int error);
-void *connection_handler(void *);
+void connection_handler(void *);
 int main(int argc, char* argv[]) {
 
   int port;
@@ -45,7 +45,7 @@ int main(int argc, char* argv[]) {
 	   new_sock = malloc(1);
            *new_sock = client_socket;
 	  
-	  printf("client connecté avec succès.\n");
+	  printf("client connectÃ© avec succÃ¨s.\n");
           printf("Connection accepted from %d.%d.%d.%d:%d\n", client_address.sin_addr.s_addr/(256*256*256)%256, client_address.sin_addr.s_addr/(256*256)%256, client_address.sin_addr.s_addr/(256)%256, client_address.sin_addr.s_addr%256, client_address.sin_port%65536);
 
 	   
@@ -62,12 +62,11 @@ int main(int argc, char* argv[]) {
 }
 
 
-void *connection_handler(void *socket_desc)
-{
+void connection_handler(void *socket_desc) {
     //Get the socket descriptor
     int sock = *(int*)socket_desc;
     int read_size;
-    char *message , client_message[BUFF_SIZE];
+    char *message , client_message[BUFF_SIZE+1];
      
     //Send some messages to the client
     message = "You are connected\n";
