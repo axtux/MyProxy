@@ -13,7 +13,7 @@
 #include <netdb.h> 
 
 char* request = "GET / HTTP/1.1\r\nHost: www.perdu.com\r\nConnection: close\r\n\r\n";
-char* host = "208.97.177.124";
+int p = 0; // delete me
 
 //int get_int(char string[], int error);
 void connection_handler(void *);
@@ -26,7 +26,7 @@ int main(int argc, char* argv[]) {
     printf("Missing port number. Usage : %s port\n", argv[0]);
     return -1;
   } else {
-    port = get_int(argv[1], MIN_PORT-1);
+    p = port = get_int(argv[1], MIN_PORT-1);
     if(port < MIN_PORT || port > MAX_PORT) {
       printf("Invalid port number. Port must range from %d to %d.\n", MIN_PORT, MAX_PORT);
       return -2;
@@ -68,7 +68,7 @@ void connection_handler(void *socket) {
   int client_size, server_size;
   char client_buffer[BUFF_SIZE+1], server_buffer[BUFF_SIZE+1];
   
-  sprintf(client_buffer, "Connected successfully !!!\n");
+  sprintf(client_buffer, "Proxy: Connected successfully to me !!!\n");
   send(sock, client_buffer, strlen(client_buffer), 0);
   
   //Receive a message from client
@@ -76,7 +76,7 @@ void connection_handler(void *socket) {
     client_size = recv(sock, client_buffer, BUFF_SIZE, 0);
 	  client_buffer[client_size] = '\0';
 	  
-	  int ssock = conn_socket(host);
+	  int ssock = conn_socket("www.perdu.com", 80); // "208.97.177.124", HTTP_PORT);
     if(ssock < 0) {
       printf("Error connecting host.\n");
       exit(-1);
@@ -90,7 +90,7 @@ void connection_handler(void *socket) {
       }
 	    server_size = recv(ssock, server_buffer, BUFF_SIZE, 0);
 	    server_buffer[server_size] = '\0';
-	    //printf(server_buffer);
+	    printf(server_buffer);
 	  } while(server_size > 0);
 	  close(ssock);
 	  

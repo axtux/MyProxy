@@ -25,7 +25,7 @@ int init_socket(int port) {
   return tcp_socket;
 }
 
-int conn_socket(char* hostname) {
+int conn_socket(char* hostname, int port) {
   int tcp_socket = socket(AF_INET, SOCK_STREAM, 0); // IPv4 TCP Socket
   if(tcp_socket == -1) {
     printf("Error opening socket.\n");
@@ -42,7 +42,7 @@ int conn_socket(char* hostname) {
   struct sockaddr_in server_address;
   server_address.sin_addr = *(struct in_addr *) hostinfo->h_addr; // get host addr
   server_address.sin_family = AF_INET; // IPv4
-  server_address.sin_port = HTTP_PORT;
+  server_address.sin_port = htons(port);
   printf("Connecting to %s\n", str_addr(server_address));
   
   if(connect(tcp_socket, (struct sockaddr *) &server_address, sizeof server_address) != 0) {

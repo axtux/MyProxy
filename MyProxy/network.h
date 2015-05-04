@@ -10,6 +10,6 @@
 #define HTTP_PORT 80
 
 int init_socket(int port);
-int conn_socket(char* hostname);
+int conn_socket(char* hostname, int port);
 
 #endif // NETWORK_H_INCLUDED
