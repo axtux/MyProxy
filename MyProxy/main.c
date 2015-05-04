@@ -1,6 +1,7 @@
 #include <stdio.h>
 //#include <stdlib.h>
 #include "network.h"
+#include "functions.h"
 
 
 #include <stdlib.h>
@@ -11,11 +12,14 @@
 #include <netinet/in.h>
 #include <netdb.h> 
 
+char* request = "GET / HTTP/1.1\r\nHost: www.perdu.com\r\nConnection: close\r\n\r\n";
+char* host = "208.97.177.124";
 
 //int get_int(char string[], int error);
 void connection_handler(void *);
-int main(int argc, char* argv[]) {
+char* str_addr(struct sockaddr_in address);
 
+int main(int argc, char* argv[]) {
   int port;
   // Arguments checks
   if(argc < 2) {
@@ -30,6 +34,11 @@ int main(int argc, char* argv[]) {
   }
   // Initiating socket
   int tcp_socket = init_socket(port);
+  if(tcp_socket < 0) {
+    printf("Error initiating socket.\n");
+    return -3;
+  }
+  
   printf("Server proxy listening on port %d.\n", port);
   // Accept clients connections
   int client_socket, *new_sock;
@@ -39,14 +48,14 @@ int main(int argc, char* argv[]) {
     client_socket = accept(tcp_socket, (struct sockaddr *) &client_address, &client_address_size);
     if (client_socket == -1) {
        printf("Error accepting client.\nMake sure port %d is not in use.\n", port);
-       return -3;
+       return -4;
     }
     pthread_t sniffer_thread;
     
-    printf("Connection accepted from %d.%d.%d.%d:%d\n", client_address.sin_addr.s_addr/(256*256*256)%256, client_address.sin_addr.s_addr/(256*256)%256, client_address.sin_addr.s_addr/(256)%256, client_address.sin_addr.s_addr%256, client_address.sin_port%65536);
+    printf("Connection accepted from %s\n", str_addr(client_address));
     if(pthread_create(&sniffer_thread, NULL,  connection_handler, (void*) &client_socket) != 0) {
         perror("could not create thread");
-        return -4;
+        return -5;
     }
   }
   close(tcp_socket);
@@ -56,34 +65,43 @@ int main(int argc, char* argv[]) {
 
 void connection_handler(void *socket) {
   int sock = *(int*)socket;
-  int read_size;
-  char *message, client_message[BUFF_SIZE+1];
-   
-  //Send some messages to the client
-  message = "You are connected\n";
-   
+  int client_size, server_size;
+  char client_buffer[BUFF_SIZE+1], server_buffer[BUFF_SIZE+1];
+  
+  sprintf(client_buffer, "Connected successfully !!!\n");
+  send(sock, client_buffer, strlen(client_buffer), 0);
+  
   //Receive a message from client
   do {
-    read_size = recv(sock, client_message, BUFF_SIZE, 0);
-	  client_message[read_size] = '\0';
-	
+    client_size = recv(sock, client_buffer, BUFF_SIZE, 0);
+	  client_buffer[client_size] = '\0';
+	  
+	  int ssock = conn_socket(host);
+    if(ssock < 0) {
+      printf("Error connecting host.\n");
+      exit(-1);
+    } else {
+      printf("Connected host successfully.\n");
+    }
+	  do {
+      if(send(ssock, request, strlen(request), 0) < 0) {
+          perror("send()");
+          exit(-2);
+      }
+	    server_size = recv(ssock, server_buffer, BUFF_SIZE, 0);
+	    server_buffer[server_size] = '\0';
+	    //printf(server_buffer);
+	  } while(server_size > 0);
+	  close(ssock);
+	  
 	  //Send the message back to client
-    send(sock , client_message , read_size, 0);
+    send(sock, client_buffer, client_size, 0);
 	
 	  //clear the message buffer
-	  //memset(client_message, '\0', BUFF_SIZE);
-  } while(read_size > 0);
+	  //memset(client_buffer, '\0'char* str_addr(struct sockaddr_in address), BUFF_SIZE);
+  } while(client_size > 0);
   
   printf("Connection closed by cient\n");
   close(sock);
 } 
-
-char* cache_name(char* host, char* uri) {
-  int size = 0;
-  int i = 0;
-  
-  while(host[i] != '\0') {
-    
-  }
-}
 

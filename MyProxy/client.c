@@ -1,4 +1,3 @@
-#
 #include<sys/socket.h>
 #include<sys/un.h>
 #include<stdio.h>
@@ -9,6 +8,7 @@
 #include<netinet/in.h>
 #include<unistd.h>
 #include "network.h"
+#include "functions.h"
 
 #define SIZEBUF 256 //taille buffer
 

@@ -1,14 +1,3 @@
-
-
-#include <unistd.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <ctype.h>
-#include <string.h>
-#include <netdb.h>
-#include <arpa/inet.h>
-#include <netinet/in.h>
-
 #include "network.h"
 
 int init_socket(int port) {
@@ -35,3 +24,32 @@ int init_socket(int port) {
 
   return tcp_socket;
 }
+
+int conn_socket(char* hostname) {
+  int tcp_socket = socket(AF_INET, SOCK_STREAM, 0); // IPv4 TCP Socket
+  if(tcp_socket == -1) {
+    printf("Error opening socket.\n");
+    return -1;
+  }
+  
+  struct hostent* hostinfo = 0;
+  hostinfo = gethostbyname(hostname);
+  if(hostinfo == 0) {
+    printf("Error getting host informations.\n");
+    return -2;
+  }
+  
+  struct sockaddr_in server_address;
+  server_address.sin_addr = *(struct in_addr *) hostinfo->h_addr; // get host addr
+  server_address.sin_family = AF_INET; // IPv4
+  server_address.sin_port = HTTP_PORT;
+  printf("Connecting to %s\n", str_addr(server_address));
+  
+  if(connect(tcp_socket, (struct sockaddr *) &server_address, sizeof server_address) != 0) {
+    printf("Error connecting host.\n");
+    return -3;
+  }
+  
+  return tcp_socket;
+}
+
