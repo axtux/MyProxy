@@ -8,12 +8,24 @@
 #include<arpa/inet.h>
 #include<netinet/in.h>
 #include<unistd.h>
+#include "network.h"
 
 #define SIZEBUF 256 //taille buffer
 
 void main(int argc, char *argv[]){
 	
-	int port= get_int(argv[1], 0);
+	int port;
+	if(argc < 2) {
+    printf("Missing port number. Usage : %s port\n", argv[0]);
+    return -1;
+  } else {
+    port = get_int(argv[1], MIN_PORT-1);
+    if(port < MIN_PORT || port > MAX_PORT) {
+      printf("Invalid port number. Port must range from %d to %d.\n", MIN_PORT, MAX_PORT);
+      return -2;
+    }
+  }
+  
 	int result;
 	char message[SIZEBUF];
 	char buffer[SIZEBUF];
