@@ -17,7 +17,6 @@ int p = 0; // delete me
 
 //int get_int(char string[], int error);
 void connection_handler(void *);
-char* str_addr(struct sockaddr_in address);
 
 int main(int argc, char* argv[]) {
   int port;
@@ -52,7 +51,7 @@ int main(int argc, char* argv[]) {
     }
     pthread_t sniffer_thread;
     
-    printf("Connection accepted from %s\n", str_addr(client_address));
+    printf("Connection accepted from %s.\n", str_addr(client_address));
     if(pthread_create(&sniffer_thread, NULL,  connection_handler, (void*) &client_socket) != 0) {
         perror("could not create thread");
         return -5;
@@ -67,6 +66,10 @@ void connection_handler(void *socket) {
   int sock = *(int*)socket;
   int client_size, server_size;
   char client_buffer[BUFF_SIZE+1], server_buffer[BUFF_SIZE+1];
+  char *host = 0, *uri;
+  
+  char request[BUFF_SIZE+1];
+  int request_size = 0;
   
   sprintf(client_buffer, "Proxy: Connected successfully to me !!!\n");
   send(sock, client_buffer, strlen(client_buffer), 0);
@@ -76,7 +79,26 @@ void connection_handler(void *socket) {
     client_size = recv(sock, client_buffer, BUFF_SIZE, 0);
 	  client_buffer[client_size] = '\0';
 	  
-	  int ssock = conn_socket("www.perdu.com", 80); // "208.97.177.124", HTTP_PORT);
+	  if(request_size+client_size > BUFF_SIZE) {
+	    printf("No host found in first %d chars. Closing connection.", BUFF_SIZE);
+	    close(sock);
+	    return;
+	  }
+	  mem_copy(client_buffer, request, request_size, client_size);
+	  request_size += client_size;
+	  request[request_size] = '\0';
+	  /*
+	  if(host == 0) {
+	    host = regmatch(request, "\r\nhost *: *([\\.A-Za-z]+)\r\n");
+	    if(host) {
+	      printf("--- Host found");
+	      printf("%s", host);
+	      printf("---");
+	    }
+	  }
+	  //*/
+	  request[request_size-2] = '\0'; // remove \r\n
+	  int ssock = conn_socket(request, 80); // "208.97.177.124", HTTP_PORT);
     if(ssock < 0) {
       printf("Error connecting host.\n");
       exit(-1);
@@ -93,7 +115,7 @@ void connection_handler(void *socket) {
 	    printf(server_buffer);
 	  } while(server_size > 0);
 	  close(ssock);
-	  
+	  //*/
 	  //Send the message back to client
     send(sock, client_buffer, client_size, 0);
 	
@@ -103,5 +125,8 @@ void connection_handler(void *socket) {
   
   printf("Connection closed by cient\n");
   close(sock);
-} 
+}
+
+
+
 

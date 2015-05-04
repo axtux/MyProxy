@@ -28,3 +28,54 @@ char* cache_name(char* host, char* uri) {
   }
 }
 
+void mem_copy(char* src, char* dst, int dst_start, int length) {
+  int i = 0;
+  while(src[i] != '\0' && i < length) {
+    dst[dst_start+i] = src[i];
+    ++i;
+  }
+}
+
+void mem_copyy(char* src, char* dst, int src_start, int length) {
+  int i = 0;
+  while(src[src_start+i] != '\0' && i < length) {
+    dst[i] = src[src_start+i];
+    ++i;
+  }
+}
+
+char *regmatch(char *str_request, char *str_regex) {
+  int err;
+  regex_t preg;
+  char *str_match = 0;
+  
+  err = regcomp(&preg, str_regex, REG_EXTENDED | REG_ICASE);
+  
+  if (err == 0) {
+    int match;
+    size_t nmatch = 0;
+    regmatch_t *pmatch = 0;
+    
+    nmatch = preg.re_nsub;
+    pmatch = malloc(sizeof (*pmatch) *nmatch);
+    if(pmatch) {
+      match = regexec(&preg, str_request, nmatch, pmatch, 0);
+      regfree(&preg);
+      if (match == 0) {
+        int start = pmatch[0].rm_so;
+        int end = pmatch[0].rm_eo;
+        size_t size = end - start;
+           
+        str_match = malloc(sizeof (char) * (size + 1));
+        if (str_match) {
+          strncpy(str_match, &str_request[start], size);
+          str_match[size] = '\0';
+        }
+      }
+      //free(pmatch);
+    }
+  }
+  return str_match;
+}
+
+
