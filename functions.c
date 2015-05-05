@@ -20,13 +20,11 @@ char* str_addr(struct sockaddr_in address) {
 }
 
 
-char* getdate(char *filname){
-	struct stat *buf;
-	char buff[100];
-	buf = malloc(sizeof(struct stat));
-	time_t date;
+char* getdate(char *filename){
+	struct stat *buf = malloc(sizeof(*buf));
+	char *buff = malloc(sizeof(*buff) * 100);
 	stat( filename, buf );
-	date = buf->st_mtime;
+	time_t date = buf->st_mtime;
 	struct tm temps = *localtime(&date);
 	printf("%lld\n", (long long)buf->st_mtime );
 	strftime(buff, 100, "%a. %d %B %Y %X", &temps);
@@ -86,36 +84,31 @@ void mem_copyy(char* src, char* dst, int src_start, int length) {
 }
 
 char *regmatch(char *str_request, char *str_regex) {
-  int err;
   regex_t preg;
+  
+  if(regcomp(&preg, str_regex, 0)) {
+    printf("Error compiling regex.\n");
+    return 0;
+  }
+  
+  size_t nmatch = preg.re_nsub;
+  regmatch_t *pmatch = malloc(sizeof(*pmatch) * nmatch);
+  
   char *str_match = 0;
   
-  err = regcomp(&preg, str_regex, REG_EXTENDED | REG_ICASE);
-  
-  if (err == 0) {
-    int match;
-    size_t nmatch = 0;
-    regmatch_t *pmatch = 0;
+  if(regexec(&preg, str_request, nmatch, pmatch, REG_EXTENDED | REG_ICASE) == 0) { // return first matching ()
+    int start = pmatch[0].rm_so; // offset first char
+    printf("start=%d\n", start);
+    int end = pmatch[0].rm_eo; // offset of last char+1
+    printf("end=%d\n", end);
+    size_t size = end - start;
     
-    nmatch = preg.re_nsub;
-    pmatch = malloc(sizeof (*pmatch) *nmatch);
-    if(pmatch) {
-      match = regexec(&preg, str_request, nmatch, pmatch, 0);
-      regfree(&preg);
-      if (match == 0) {
-        int start = pmatch[0].rm_so;
-        int end = pmatch[0].rm_eo;
-        size_t size = end - start;
-           
-        str_match = malloc(sizeof (char) * (size + 1));
-        if (str_match) {
-          strncpy(str_match, &str_request[start], size);
-          str_match[size] = '\0';
-        }
-      }
-      //free(pmatch);
-    }
+    str_match = malloc(sizeof(*str_match) * (size+1));
+    strncpy(str_match, &str_request[start], size);
+    str_match[size] = '\0';
   }
+  regfree(&preg); // frees memory allocated by regcomp()
+  free(pmatch);
   return str_match;
 }
 
