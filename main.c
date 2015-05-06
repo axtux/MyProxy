@@ -12,9 +12,6 @@
 #include <netinet/in.h>
 #include <netdb.h> 
 
-char* request = "GET / HTTP/1.1\r\nHost: www.perdu.com\r\nConnection: close\r\n\r\n";
-int p = 0; // delete me
-
 //int get_int(char string[], int error);
 void connection_handler(void *);
 
@@ -25,7 +22,7 @@ int main(int argc, char* argv[]) {
     printf("Missing port number. Usage : %s port\n", argv[0]);
     return -1;
   } else {
-    p = port = get_int(argv[1], MIN_PORT-1);
+    port = get_int(argv[1], MIN_PORT-1);
     if(port < MIN_PORT || port > MAX_PORT) {
       printf("Invalid port number. Port must range from %d to %d.\n", MIN_PORT, MAX_PORT);
       return -2;
@@ -86,36 +83,40 @@ void connection_handler(void *socket) {
 	  }
 	  memcpy(&request[request_size], client_buffer, client_size);
 	  request_size += client_size;
-	  request[request_size] = '\0';
-	  printf(request);
-	  /*
-	  if(host == 0) {
-	    host = regmatch(request, "\r\nhost *: *([\\.A-Za-z]+)\r\n");
-	    if(host) {
-	      printf("--- Host found");
-	      printf("%s", host);
-	      printf("---");
-	    }
-	  }
-	  //*/
-	  request[request_size-2] = '\0'; // remove \r\n
-	  int ssock = conn_socket(request, 80); // "208.97.177.124", HTTP_PORT);
-    if(ssock < 0) {
-      printf("Error connecting host.\n");
-      exit(-1);
-    } else {
-      printf("Connected host successfully.\n");
-    }
-	  do {
-      if(send(ssock, request, strlen(request), 0) < 0) {
-          perror("send()");
-          exit(-2);
+	  request[request_size] = '\r';
+	  request[request_size+1] = '\n';
+	  request[request_size+2] = '\0';
+	  
+	  host = get_host(request);
+	  //host = regmatch(request, "\r\nhost *: *([\\.A-Za-z]+)\r\n");
+	  
+    if(host) {
+      printf("--- Host : %s ---\n", host);
+      printf("--- Sending request : %s ---\n", request);
+      
+	    int ssock = conn_socket(host, HTTP_PORT); // "208.97.177.124", HTTP_PORT);
+      if(ssock < 0) {
+        printf("Error connecting host.\n");
+        exit(-1);
+      } else {
+        printf("Connected host successfully.\n");
       }
-	    server_size = recv(ssock, server_buffer, BUFF_SIZE, 0);
-	    server_buffer[server_size] = '\0';
-	    printf(server_buffer);
-	  } while(server_size > 0);
-	  close(ssock);
+      
+	    do {
+	      client_size = send(ssock, request, strlen(request), 0);
+	      printf("client_size=%d", client_size);
+        if(client_size < 0) {
+            perror("send()");
+            exit(-2);
+        }
+        
+	      server_size = recv(ssock, server_buffer, BUFF_SIZE, 0);
+	      server_buffer[server_size] = '\0';
+	      printf(server_buffer);
+	    } while(server_size > 0);
+	    close(ssock);
+    }
+    
 	  //*/
 	  //Send the message back to client
     send(sock, client_buffer, client_size, 0);

@@ -3,7 +3,7 @@
 
 #include "functions.h"
 
-#define BUFF_SIZE 128
+#define BUFF_SIZE 2048
 #define MIN_PORT 0
 #define MAX_PORT 65535
 #define MAX_CONN 20
