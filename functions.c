@@ -19,7 +19,6 @@ char* str_addr(struct sockaddr_in address) {
   return r;
 }
 
-
 char* getdate(char *filename){
 	struct stat *buf = malloc(sizeof(*buf));
 	char *buff = malloc(sizeof(*buff) * 100);
@@ -82,7 +81,7 @@ void mem_copyy(char* src, char* dst, int src_start, int length) {
     ++i;
   }
 }
-
+// Not working with gcc 4.8
 char *regmatch(char *str_request, char *str_regex) {
   regex_t preg;
   
@@ -110,6 +109,57 @@ char *regmatch(char *str_request, char *str_regex) {
   regfree(&preg); // frees memory allocated by regcomp()
   free(pmatch);
   return str_match;
+}
+
+char* get_host(char* headers) {
+  int i = 0, l = strlen(headers);
+  int host_start = 0, host_end = 0;
+  char *str = 0;
+  
+  while(i+6 < l) {
+    if(
+      (headers[i] == 'h' || headers[i] == 'H')
+      && (headers[i+1] == 'o' || headers[i+1] == 'O')
+      && (headers[i+2] == 's' || headers[i+2] == 'S')
+      && (headers[i+3] == 't' || headers[i+3] == 'T')
+      && headers[i+4] == ':'
+      && headers[i+5] == ' '
+    ) {
+      host_start = i+6;
+      break;
+    }
+    ++i;
+  }
+  
+  if(host_start) {
+    i = host_start;
+    while(i < l) {
+      if(
+        (headers[i] >= 'a' && headers[i] <= 'z')
+        || (headers[i] >= 'A' && headers[i] <= 'Z')
+        || (headers[i] >= '0' && headers[i] <= '9')
+        || headers[i] == '.'
+      ) { // match [.a-zA-Z0-9]
+        // do nothing
+      } else if(i != host_start && headers[i] == '\r' && i+1 < l && headers[i+1] == '\n'){
+        host_end = i;
+        break;
+      }
+      ++i;
+    }
+    if(host_end) {
+      int size = host_end - host_start;
+      str = malloc(sizeof(*str) * (size +1));
+      i = 0;
+      while(i < size) {
+        str[i] = headers[host_start+i];
+        ++i;
+      }
+      str[size] = '\0';
+    }
+  }
+  
+  return str;
 }
 
 

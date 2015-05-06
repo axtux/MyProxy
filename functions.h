@@ -2,7 +2,6 @@
 #define FUNCTIONS_H_INCLUDED
 
 #define MAXSIZE 256
-#define BUFF_SIZE 256
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -21,5 +20,6 @@ void mem_copyy(char* src, char* dst, int src_start, int length);
 char *regmatch(char *str_request, char *str_regex);
 char* getdate(char *filname);
 void ecrireFichier(char texte[], char nom[]);
+char* get_host(char* headers);
 
 #endif // FUNCTIONS_H_INCLUDED
