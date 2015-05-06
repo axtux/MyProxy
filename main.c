@@ -84,9 +84,10 @@ void connection_handler(void *socket) {
 	    close(sock);
 	    return;
 	  }
-	  mem_copy(client_buffer, request, request_size, client_size);
+	  memcpy(&request[request_size], client_buffer, client_size);
 	  request_size += client_size;
 	  request[request_size] = '\0';
+	  printf(request);
 	  /*
 	  if(host == 0) {
 	    host = regmatch(request, "\r\nhost *: *([\\.A-Za-z]+)\r\n");

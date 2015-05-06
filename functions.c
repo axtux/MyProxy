@@ -66,21 +66,6 @@ char* cache_name(char* host, char* uri) {
   }
 }
 
-void mem_copy(char* src, char* dst, int dst_start, int length) {
-  int i = 0;
-  while(src[i] != '\0' && i < length) {
-    dst[dst_start+i] = src[i];
-    ++i;
-  }
-}
-
-void mem_copyy(char* src, char* dst, int src_start, int length) {
-  int i = 0;
-  while(src[src_start+i] != '\0' && i < length) {
-    dst[i] = src[src_start+i];
-    ++i;
-  }
-}
 // Not working with gcc 4.8
 char *regmatch(char *str_request, char *str_regex) {
   regex_t preg;
