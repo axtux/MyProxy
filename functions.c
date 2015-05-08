@@ -102,12 +102,12 @@ int extract_first_request(char *requests, int *requests_size, char *request, int
   
   for(i = 4; i < *requests_size; ++i) {
     if(
-      requests[i-4] == '\r'
-      && requests[i-3] == '\n'
-      && requests[i-2] == '\r'
-      && requests[i-1] == '\n'
+      requests[i-3] == '\r'
+      && requests[i-2] == '\n'
+      && requests[i-1] == '\r'
+      && requests[i] == '\n'
     ) {
-      *request_size = i;
+      *request_size = i+1;
       break;
     }
   }
@@ -178,52 +178,86 @@ char* extract_host(char* request, int length) {
 }
 char* extract_uri(char* request, int length) {
   int i = 0;
-  int host_start = 0, host_end = 0;
-  char *host = 0;
+  int uri_start = 0, uri_end = 0;
+  char *uri = 0;
   
-  while(i+6 < length) {
+  while(i+4 < length) {
     if(
-      (request[i] == 'h' || request[i] == 'H')
-      && (request[i+1] == 'o' || request[i+1] == 'O')
-      && (request[i+2] == 's' || request[i+2] == 'S')
-      && (request[i+3] == 't' || request[i+3] == 'T')
-      && request[i+4] == ':'
-      && request[i+5] == ' '
+      (request[i] == 'g' || request[i] == 'G')
+      && (request[i+1] == 'e' || request[i+1] == 'E')
+      && (request[i+2] == 't' || request[i+2] == 'T')
+      && request[i+3] == ' '
     ) {
-      host_start = i+6;
+      uri_start = i+4;
       break;
     }
     ++i;
   }
   
-  if(host_start) {
-    i = host_start;
+  if(uri_start) {
+    i = uri_start;
     while(i < length) {
       if(
         (request[i] >= 'a' && request[i] <= 'z')
         || (request[i] >= 'A' && request[i] <= 'Z')
         || (request[i] >= '0' && request[i] <= '9')
+        || request[i] == '%'
+        || request[i] == '-'
         || request[i] == '.'
-      ) { // match [.a-zA-Z0-9]
+        || request[i] == '_'
+        || request[i] == '~'
+        || request[i] == ':'
+        || request[i] == '/'
+        || request[i] == '?'
+        || request[i] == '#'
+        || request[i] == '['
+        || request[i] == ']'
+        || request[i] == '@'
+        || request[i] == '!'
+        || request[i] == '$'
+        || request[i] == '&'
+        || request[i] == '\''
+        || request[i] == '('
+        || request[i] == ')'
+        || request[i] == '*'
+        || request[i] == '+'
+        || request[i] == ','
+        || request[i] == ';'
+        || request[i] == '='
+      ) { // match uri chars
         // do nothing
-      } else if(i != host_start && request[i] == '\r' && i+1 < length && request[i+1] == '\n'){
-        host_end = i;
+      } else if(
+        i != uri_start
+        && i+10 < length
+        && request[i] == ' '
+        && (request[i+1] == 'h' || request[i+1] == 'H')
+        && (request[i+2] == 't' || request[i+2] == 'T')
+        && (request[i+3] == 't' || request[i+3] == 'T')
+        && (request[i+4] == 'p' || request[i+4] == 'P')
+        && request[i+5] == '/'
+        && (request[i+6] >= '0' && request[i+6] <= '9')
+        && request[i+7] == '.'
+        && (request[i+8] >= '0' && request[i+8] <= '9')
+        && request[i+9] == '\r'
+        && request[i+10] == '\n'
+      ){
+        uri_end = i;
         break;
       }
       ++i;
     }
-    if(host_end) {
-      int size = host_end - host_start;
-      host = malloc(sizeof(*host) * (size +1));
+    if(uri_end) {
+      int size = uri_end - uri_start;
+      uri = malloc(sizeof(*uri) * (size +1));
       i = 0;
       while(i < size) {
-        host[i] = request[host_start+i];
+        uri[i] = request[uri_start+i];
         ++i;
       }
-      host[size] = '\0';
+      uri[size] = '\0';
     }
   }
   
-  return host;
+  return uri;
 }
 
