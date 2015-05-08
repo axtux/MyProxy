@@ -1,5 +1,5 @@
 client: rm_client
-	gcc -g client.c functions.c -o client
+	gcc -g client.c network.c functions.c -o client
 
 server: rm_server
 	gcc -g main.c network.c functions.c -pthread -o server
