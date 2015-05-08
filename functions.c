@@ -197,7 +197,7 @@ char* extract_uri(char* request, int length) {
   if(uri_start) {
     i = uri_start;
     while(i < length) {
-      if(
+      if( // match uri chars
         (request[i] >= 'a' && request[i] <= 'z')
         || (request[i] >= 'A' && request[i] <= 'Z')
         || (request[i] >= '0' && request[i] <= '9')
@@ -224,9 +224,9 @@ char* extract_uri(char* request, int length) {
         || request[i] == ','
         || request[i] == ';'
         || request[i] == '='
-      ) { // match uri chars
+      ) {
         // do nothing
-      } else if(
+      } else if( // not first char and end of request
         i != uri_start
         && i+10 < length
         && request[i] == ' '
@@ -240,22 +240,25 @@ char* extract_uri(char* request, int length) {
         && (request[i+8] >= '0' && request[i+8] <= '9')
         && request[i+9] == '\r'
         && request[i+10] == '\n'
-      ){
+      ) {
         uri_end = i;
+        break;
+      } else { // wrong char
         break;
       }
       ++i;
     }
-    if(uri_end) {
-      int size = uri_end - uri_start;
-      uri = malloc(sizeof(*uri) * (size +1));
-      i = 0;
-      while(i < size) {
-        uri[i] = request[uri_start+i];
-        ++i;
-      }
-      uri[size] = '\0';
+  }
+  
+  if(uri_end) {
+    int size = uri_end - uri_start;
+    uri = malloc(sizeof(*uri) * (size +1));
+    i = 0;
+    while(i < size) {
+      uri[i] = request[uri_start+i];
+      ++i;
     }
+    uri[size] = '\0';
   }
   
   return uri;
