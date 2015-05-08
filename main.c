@@ -85,7 +85,7 @@ void connection_handler(void *socket) {
       host = extract_host(request, request_size);
       uri = extract_uri(request, request_size);
       //host = regmatch(requests, "\r\nhost *: *([\\.A-Za-z]+)\r\n");
-      if(host) {
+      if(host && uri) {
         server = conn_socket(host, HTTP_PORT);
         if(server < 0) {
           printf("502 Bad Gateway\r\nError connecting to %s.\n", host);
@@ -97,12 +97,14 @@ void connection_handler(void *socket) {
             do {
               buffer_size = recv(server, buffer, BUFF_SIZE, 0);
               if(buffer_size < 0) {
-                printf("Error receiving data from server.");
+                printf("Error receiving data from server.\n");
+              } else if(buffer_size == 0) {
+                printf("Connection closed by server.\n");
               } else {
                 if(send(client, buffer, buffer_size, 0) != buffer_size) {
-                  printf("Error sending data back to the client.");
+                  printf("Error sending data back to the client.\n");
                 } else {
-                
+                  printf("Data sent back to the client.\n");
                 }
               }
             } while(buffer_size > 0);
@@ -111,11 +113,11 @@ void connection_handler(void *socket) {
         }
         free(host);
       } else {
-        printf("Host not found within request.");
+        return http_code(client, 400);
       }
     }
     
-  } while(buffer_size > 0);
+  } while(buffer_size >= 0); // persistant connection
   
   printf("Connection closed by cient (buffer_size=%d)\n", buffer_size);
   close(client);
