@@ -12,7 +12,7 @@
 #include "functions.h"
 
 int main(int argc, char *argv[]){
-  char request[BUFF_SIZE+1], buffer[BUFF_SIZE+1];
+  char request[2*BUFF_SIZE+1], buffer[BUFF_SIZE+1];
   int port, request_size = 0, buffer_size = 0;
   
   if(argc < 3) {
@@ -25,9 +25,8 @@ int main(int argc, char *argv[]){
       return -2;
     }
   
-    sprintf(request, "GET /toi HTTP/1.1\r\nHost: %s\r\n%s\r\n", argv[1], (argc >= 4 && argv[3][0] == '1') ? "" : "Connection: close\r\n");
+    sprintf(request, "GET / HTTP/1.1\r\nHost: %s\r\n%s\r\n", argv[1], (argc >= 4 && argv[3][0] == '1') ? "" : "Connection: close\r\n");
     request_size = strlen(request);
-    printf("Made request:%s", request);
   }
   
   int server = conn_socket("127.0.0.1", port);
@@ -35,10 +34,12 @@ int main(int argc, char *argv[]){
     printf("Error connecting to proxy server.\n");
   } else {
     printf("Connected to proxy server successfully.\n");
+    
+    printf("--- REQUEST ---\n%s", request);
     if(send(server, request, request_size, 0) != request_size) {
       printf("Error sending data to server.\n");
     } else {
-      do {
+      //do {
         buffer_size = recv(server, buffer, BUFF_SIZE, 0);
         if(buffer_size < 0) {
           printf("Error receiving data from server.\n");
@@ -46,10 +47,30 @@ int main(int argc, char *argv[]){
           printf("Connection closed by server.\n");
         } else {
           buffer[buffer_size] = '\0';
-          printf("Data received :%s", buffer);
+          printf("--- RESPONSE ---\n%s", buffer);
         }
-      } while(buffer_size > 0);
+      //} while(buffer_size > 0);
     }
+    
+    sprintf(request, "GET /404 HTTP/1.1\r\nHost: %s\r\n%s\r\n", argv[1], (argc >= 4 && argv[3][0] == '1') ? "" : "Connection: close\r\n");
+    request_size = strlen(request);
+    printf("--- REQUEST ---\n%s", request);
+    if(send(server, request, request_size, 0) != request_size) {
+      printf("Error sending data to server.\n");
+    } else {
+      //do {
+        buffer_size = recv(server, buffer, BUFF_SIZE, 0);
+        if(buffer_size < 0) {
+          printf("Error receiving data from server.\n");
+        } else if(buffer_size == 0) {
+          printf("Connection closed by server.\n");
+        } else {
+          buffer[buffer_size] = '\0';
+          printf("--- RESPONSE ---\n%s", buffer);
+        }
+      //} while(buffer_size > 0);
+    }
+    
     close(server);
   }
   /*
