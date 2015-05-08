@@ -60,73 +60,65 @@ int main(int argc, char* argv[]) {
 
 
 void connection_handler(void *socket) {
-  int sock = *(int*)socket;
-  int client_size, server_size;
-  char client_buffer[BUFF_SIZE+1], server_buffer[BUFF_SIZE+1];
-  char *host = 0, *uri;
+  int client = *(int*)socket;
+  int server = -1;
   
-  char request[BUFF_SIZE+1];
-  int request_size = 0;
+  char request[BUFF_SIZE], requests[BUFF_SIZE], buffer[BUFF_SIZE];
+  int request_size = 0, requests_size = 0, buffer_size = 0;
   
-  sprintf(client_buffer, "Proxy: Connected successfully to me !!!\n");
-  send(sock, client_buffer, strlen(client_buffer), 0);
+  char *host = 0, *uri = 0;
   
-  //Receive a message from client
   do {
-    client_size = recv(sock, client_buffer, BUFF_SIZE, 0);
-	  client_buffer[client_size] = '\0';
-	  
-	  if(request_size+client_size > BUFF_SIZE) {
-	    printf("No host found in first %d chars. Closing connection.", BUFF_SIZE);
-	    close(sock);
-	    return;
-	  }
-	  memcpy(&request[request_size], client_buffer, client_size);
-	  request_size += client_size;
-	  request[request_size] = '\r';
-	  request[request_size+1] = '\n';
-	  request[request_size+2] = '\0';
-	  
-	  host = get_host(request);
-	  //host = regmatch(request, "\r\nhost *: *([\\.A-Za-z]+)\r\n");
-	  
-    if(host) {
-      printf("--- Host : %s ---\n", host);
-      printf("--- Sending request : %s ---\n", request);
-      
-	    int ssock = conn_socket(host, HTTP_PORT); // "208.97.177.124", HTTP_PORT);
-      if(ssock < 0) {
-        printf("Error connecting host.\n");
-        exit(-1);
-      } else {
-        printf("Connected host successfully.\n");
-      }
-      
-	    do {
-	      client_size = send(ssock, request, strlen(request), 0);
-	      printf("client_size=%d", client_size);
-        if(client_size < 0) {
-            perror("send()");
-            exit(-2);
+    buffer_size = recv(client, buffer, BUFF_SIZE, 0);
+    // copy buffered data to requests
+    if(requests_size+buffer_size > BUFF_SIZE) {
+      sprintf(buffer, "413 Request Entity Too Large (max %d chars)\r\n\r\n", BUFF_SIZE);
+      send(client, buffer, strlen(buffer), 0);
+      printf(buffer);
+      close(client);
+      return;
+    }
+    memcpy(&requests[requests_size], buffer, buffer_size);
+    requests_size += buffer_size;
+    
+    while(extract_first_request(requests, &requests_size, request, &request_size) == 0) {
+      host = extract_host(request, request_size);
+      uri = extract_uri(request, request_size);
+      //host = regmatch(requests, "\r\nhost *: *([\\.A-Za-z]+)\r\n");
+      if(host) {
+        server = conn_socket(host, HTTP_PORT);
+        if(server < 0) {
+          printf("502 Bad Gateway\r\nError connecting to %s.\n", host);
+        } else {
+          printf("Connected to %s successfully.\n", host);
+          if(send(server, request, request_size, 0) != request_size) {
+            printf("Error sending data to server.");
+          } else {
+            do {
+              buffer_size = recv(server, buffer, BUFF_SIZE, 0);
+              if(buffer_size < 0) {
+                printf("Error receiving data from server.");
+              } else {
+                if(send(client, buffer, buffer_size, 0) != buffer_size) {
+                  printf("Error sending data back to the client.");
+                } else {
+                
+                }
+              }
+            } while(buffer_size > 0);
+          }
+          close(server);
         }
-        
-	      server_size = recv(ssock, server_buffer, BUFF_SIZE, 0);
-	      server_buffer[server_size] = '\0';
-	      printf(server_buffer);
-	    } while(server_size > 0);
-	    close(ssock);
+        free(host);
+      } else {
+        printf("Host not found within request.");
+      }
     }
     
-	  //*/
-	  //Send the message back to client
-    send(sock, client_buffer, client_size, 0);
-	
-	  //clear the message buffer
-	  //memset(client_buffer, '\0'char* str_addr(struct sockaddr_in address), BUFF_SIZE);
-  } while(client_size > 0);
+  } while(buffer_size > 0);
   
-  printf("Connection closed by cient\n");
-  close(sock);
+  printf("Connection closed by cient (buffer_size=%d)\n", buffer_size);
+  close(client);
 }
 
 

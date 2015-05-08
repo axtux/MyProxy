@@ -20,6 +20,8 @@ void mem_copyy(char* src, char* dst, int src_start, int length);
 char *regmatch(char *str_request, char *str_regex);
 char* getdate(char *filname);
 void ecrireFichier(char texte[], char nom[]);
-char* get_host(char* headers);
+int extract_first_request(char *requests, int *requests_size, char *request, int *request_size);
+char* extract_host(char* request, int length);
+char* extract_uri(char* request, int length);
 
 #endif // FUNCTIONS_H_INCLUDED
