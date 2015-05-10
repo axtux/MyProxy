@@ -18,7 +18,7 @@
 int get_int(char string[], int error);
 char* str_addr(struct sockaddr_in address);
 int strpos(char *str, char *rch);
-int mempos(char *mem, const char *str, size_t max_mem);
+int mempos(char *mem, const char *str, int max_mem);
 char *cache_filename(char* host, char* uri);
 char *regmatch(char *str_request, char *str_regex);
 char *http_time(char *filename);

@@ -27,13 +27,15 @@ int strpos(char *str, char *rch) {
   }
 }
 
-int mempos(char *mem, const char *str, size_t max_mem) {
+int mempos(char *mem, const char *str, int max_length) {
   int i = 0, len = strlen(str);
-  for(max_mem -= len-1; i < max_mem; ++i) {
+  
+  for(max_length -= len-1; i < max_length; ++i) {
     if(memcmp(&mem[i], str, len) == 0) {
       return i;
     }
   }
+  
   return -1;
 }
 
@@ -214,12 +216,10 @@ char *regmatch(char *str_request, char *str_regex) {
 }
 
 int extract_first_request(char *requests, int *requests_size, char *request, int *request_size) {
-  //*
-  requests[*requests_size] = 0;
-  *request_size = strpos(requests, "\r\n\r\n")+4;
-  //*/*request_size = mempos(requests, "\r\n\r\n", *requests_size)+4; // cause SEGFAULT on last call
+  int pos = mempos(requests, "\r\n\r\n", *requests_size)+4;
   
-  if(*request_size != 3) {
+  if(pos != 3) { printf("Entré ! pos=%d\n", pos);
+    *request_size = pos;
     memcpy(request, requests, *request_size);
     
     *requests_size -= *request_size;
@@ -228,7 +228,6 @@ int extract_first_request(char *requests, int *requests_size, char *request, int
     return 0;
   }
   return -1;
-  //*/
 }
 
 char* extract_host(char* request, int length) {
