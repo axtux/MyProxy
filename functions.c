@@ -220,7 +220,7 @@ char *regmatch(char *str_request, char *str_regex) {
 int extract_first_request(char *requests, int *requests_size, char *request, int *request_size) {
   int pos = mempos(requests, "\r\n\r\n", *requests_size)+4;
   
-  if(pos != 3) { printf("Entré ! pos=%d\n", pos);
+  if(pos != 3) {
     *request_size = pos;
     memcpy(request, requests, *request_size);
     
