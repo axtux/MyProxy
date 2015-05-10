@@ -114,6 +114,8 @@ int main(int argc, char *argv[]){
 char *make_request(char *host, char *uri) {
   char *request = malloc(sizeof(*request) * BUFF_SIZE);
   sprintf(request, "GET %s HTTP/1.1\r\nHost: %s\r\n\r\n", uri, host);
+  //sprintf(request, "GET http://%s%s HTTP/1.1\r\nHost: %s\r\nUser-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:37.0) Gecko/20100101 Firefox/37.0\r\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\r\nAccept-Language: en-US,en;q=0.5\r\nAccept-Encoding: gzip, deflate\r\nCache-Control: max-age=0\r\n\r\n", host, uri, host);
+  
   return request;
 }
 

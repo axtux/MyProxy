@@ -86,10 +86,21 @@ void main(int argc, char** argv) {
   str[length] = '\0';
   printf("r=%s\n", str);
   //*/
-  //*
+  /*
   char *host = "www.perdu.comé";
   char *uri = "/ui\\op\%test";
   printf("-%s-\n", cache_filename(host, uri));
   //*/
+  /*
+  switch(get_int("3", -1)) {
+    case 3:
+      printf("3\n");
+    case 2:
+      printf("2\n");
+    default:
+      printf("def\n");
+  }
+  //*/
+  printf("sizeof(char)=%d\n", sizeof(char));
 }
 

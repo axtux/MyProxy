@@ -149,7 +149,7 @@ char *cache_filename(char* host, char* uri) {
   
   j = strlen(CACHE_PATH);
   filename = malloc(sizeof(*filename) * (j+size+1));
-  filename[size] = 0;
+  filename[j+size] = 0;
   memcpy(filename, CACHE_PATH, j);
   
   for(i = 0; host[i] != 0; ++i, ++j) {

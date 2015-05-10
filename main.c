@@ -89,11 +89,12 @@ int connection_handler(void *socket) {
           printf("Connected to %s successfully.\n", host);
           
           cache_file = cache_filename(host, uri);
+          remove_header(request, &request_size, "If-None-Match");
           remove_header(request, &request_size, "If-Modified-Since");
           remove_header(request, &request_size, "Connection");
           add_cache_header(request, &request_size, BUFF_SIZE, http_time(cache_file));
           add_close_header(request, &request_size, BUFF_SIZE);
-          /* print new request
+          //* print new request
           request[request_size] = 0;
           printf("--- REQUEST ---\n%s", request);
           //*/
@@ -103,6 +104,7 @@ int connection_handler(void *socket) {
             response_size = 0;
             while( (buffer_size = recv(server, buffer, BUFF_SIZE, 0)) > 0) {
               if(response_size+buffer_size > BUFF_SIZE) {
+                printf("Buffer is full ! (should be %d)\n", response_size+buffer_size);
                 response_size = buffer_size = 0;
                 break;
               }
@@ -125,24 +127,25 @@ int connection_handler(void *socket) {
                     } else {
                       printf("Got 304 but no cache file %s.\n", cache_file);
                     }
+                    break;
                   case 200: // OK / write to cache
                     printf("Got 200, saving data to cache file %s.\n", cache_file);
                     file_put_contents(cache_file, response, response_size);
-                  default:
-                    /*
-                    response[response_size] = 0;
-                    printf("--- RESPONSE ---\n%s", response);
-                    //*/
-                    if(send(client, response, response_size, 0) != response_size) {
-                      printf("Error sending data back to the client.\n");
-                      close(client);
-                    } else {
-                      printf("Data sent back to the client.\n");
-                      if(close_client) {
-                        printf("Closing client connection.\n");
-                        close(client);
-                      }
-                    }
+                    break;
+                }
+                /*
+                response[response_size] = 0;
+                printf("--- RESPONSE ---\n%s", response);
+                //*/
+                if(send(client, response, response_size, 0) != response_size) {
+                  printf("Error sending data back to the client.\n");
+                  close(client);
+                } else {
+                  printf("Data sent back to the client.\n");
+                  if(close_client) {
+                    printf("Closing client connection.\n");
+                    close(client);
+                  }
                 }
               } else { // response_size == 0
                 http_header(client, "502 Bad Gateway (4)", close_client);
