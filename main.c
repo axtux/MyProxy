@@ -86,7 +86,7 @@ int connection_handler(void *socket) {
         if(server < 0) {
           http_header(client, "502 Bad Gateway (1)", close_client);
         } else {
-          printf("Connected to %s successfully.\n", host);
+          printf("Connected to %s successfully to get %s.\n", host, uri);
           
           cache_file = cache_filename(host, uri);
           remove_header(request, &request_size, "If-None-Match");
@@ -94,7 +94,7 @@ int connection_handler(void *socket) {
           remove_header(request, &request_size, "Connection");
           add_cache_header(request, &request_size, BUFF_SIZE, http_time(cache_file));
           add_close_header(request, &request_size, BUFF_SIZE);
-          //* print new request
+          /* print new request
           request[request_size] = 0;
           printf("--- REQUEST ---\n%s", request);
           //*/
