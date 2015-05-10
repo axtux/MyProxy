@@ -13,7 +13,7 @@ void main(int argc, char** argv) {
     printf("--- REQ ---:\r\n%s--- END ---\r\n", request);
   }
   //*/
-  //*
+  /*
   char requests[200], *rch = "ton";
   sprintf(requests, "Coucou toi\r\nBonjour sinon\r\n\r\nSeconde requete\r\n\r\nTroisieme requete\r\nBeaucoup plus longue cette fois !\r\nEncore plus longue...\r\n\r\n");
   int requests_size = strlen(requests);
@@ -86,7 +86,7 @@ void main(int argc, char** argv) {
   str[length] = '\0';
   printf("r=%s\n", str);
   //*/
-  /*
+  //*
   char *host = "www.perdu.comé";
   char *uri = "/ui\\op\%test";
   printf("-%s-\n", cache_filename(host, uri));
