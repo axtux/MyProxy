@@ -11,5 +11,6 @@
 
 int init_socket(int port);
 int conn_socket(char* hostname, int port);
+int http_header(int socket, char *header, int close);
 
 #endif // NETWORK_H_INCLUDED

@@ -53,15 +53,18 @@ int conn_socket(char* hostname, int port) {
   return tcp_socket;
 }
 
-void http_code(int socket, int code) {
-  char buffer[BUFF_SIZE] = "\0";
-  switch(code) {
-    case 400:
-      sprintf(buffer, "400 Bad Request\r\n\r\n");
-      break;
-    default:
-      sprintf(buffer, "500 Internal Server Error\r\n\r\n");
+int http_header(int socket, char *header, int close_socket) {
+  int r = -1;
+  char buffer[BUFF_SIZE];
+  sprintf(buffer, "%s\r\nContent-length: 0\r\n\r\n", header);
+  
+  int len = strlen(buffer);
+  if(send(socket, buffer, len, 0) == len) {
+    r = 0;
   }
-  send(socket, buffer, strlen(buffer), 0);
-  close(socket);
+  if(close_socket) {
+    close(socket);
+  }
+  return r;
 }
+
