@@ -2,6 +2,8 @@
 #define FUNCTIONS_H_INCLUDED
 
 #define MAXSIZE 256
+#define CACHE_PATH ./cache_files
+#define HTTP_TIME_LENGTH 29
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,13 +17,20 @@
 
 int get_int(char string[], int error);
 char* str_addr(struct sockaddr_in address);
-void mem_copy(char* src, char* dst, int dst_start, int length);
-void mem_copyy(char* src, char* dst, int src_start, int length);
+int strpos(char *str, char *rch);
+int mempos(char *mem, const char *str, size_t max_mem);
+char *cache_filename(char* host, char* uri);
 char *regmatch(char *str_request, char *str_regex);
-char* getdate(char *filname);
-void ecrireFichier(char texte[], char nom[]);
+char *http_time(char *filename);
+void remove_header(char *request, int *length, char *header);
+void add_cache_header(char *request, int *length, int max_length, char *time);
+void add_close_header(char *request, int *length, int max_length);
+int file_put_contents(char *filename, char *content, int length);
+int file_get_contents(char *filename, char *content, int max_length);
 int extract_first_request(char *requests, int *requests_size, char *request, int *request_size);
 char* extract_host(char* request, int length);
 char* extract_uri(char* request, int length);
+char* extract_header(char* request, int length, char *header);
+int extract_http_code(char *response, int response_size);
 
 #endif // FUNCTIONS_H_INCLUDED

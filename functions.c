@@ -18,52 +18,169 @@ char* str_addr(struct sockaddr_in address) {
   sprintf(r, "%d.%d.%d.%d:%d", address.sin_addr.s_addr%256, address.sin_addr.s_addr/(256)%256, address.sin_addr.s_addr/(256*256)%256, address.sin_addr.s_addr/(256*256*256)%256, address.sin_port%65536);
   return r;
 }
-
-char* getdate(char *filename){
-  struct stat *buf = malloc(sizeof(*buf));
-  char *buff = malloc(sizeof(*buff) * 100);
-  stat( filename, buf );
-  time_t date = buf->st_mtime;
-  struct tm temps = *localtime(&date);
-  printf("%lld\n", (long long)buf->st_mtime );
-  strftime(buff, 100, "%a. %d %B %Y %X", &temps);
-  free(buf);
-  return buff;
-}
-
-void ecrireFichier(char texte[], char nom[]){
-  FILE* fichier = NULL;
-  fichier = fopen(nom, "w");
-  if (fichier != NULL)
-  {
-    fputs(texte, fichier);
-    fclose(fichier);
+int strpos(char *str, char *rch) {
+  char *start = strstr(str, rch);
+  if(start) {
+    return (int) ((start-str) / sizeof(*str));
+  } else {
+    return -1;
   }
-  return;
 }
 
-int lireFichier(char nom[], char message[]){ //modifie message
-  FILE* fichier = NULL;
-  fichier = fopen(nom, "r");
-  if (fichier == NULL){
-    printf("fichier inexistant\n");
+int mempos(char *mem, const char *str, size_t max_mem) {
+  int i = 0, len = strlen(str);
+  for(max_mem -= len-1; i < max_mem; ++i) {
+    if(memcmp(&mem[i], str, len) == 0) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+char* http_time(char *filename){
+  struct stat *buf = malloc(sizeof(*buf));
+  char *str = 0;
+  
+  if(stat(filename, buf) != -1) {
+    struct tm time = *gmtime(&buf->st_mtime);
+    str = malloc(sizeof(*str) * (HTTP_TIME_LENGTH+1));
+    strftime(str, HTTP_TIME_LENGTH+1, "%a, %d %b %Y %X GMT", &time);
+  }
+  
+  free(buf);
+  return str;
+}
+
+void remove_header(char *request, int *length, char *header) {
+  int start = mempos(request, header, *length);
+  
+  if(start != -1) {
+    int size = mempos(&request[start], "\r\n", *length) +2;
+    
+    if(size != 1) {
+      //*
+      int i;
+      for(i = start; i+size < *length; ++i) {
+        request[i] = request[i+size];
+      }
+      //*/ memcpy(&request[start], &request[start+size], *length-start-size);
+      *length -= size;
+    }
+  }
+}
+
+void add_cache_header(char *request, int *length, int max_length, char *time) {
+  int new_length = *length + 19 + HTTP_TIME_LENGTH + 2;
+  if(!time || max_length < new_length) {
+    return;
+  }
+  
+  memcpy(&request[*length-2], "If-Modified-Since: ", 19); // copy over last \r\n
+  memcpy(&request[*length-2+19], time, HTTP_TIME_LENGTH);
+  memcpy(&request[*length-2+19+HTTP_TIME_LENGTH], "\r\n\r\n", 4);
+  *length = new_length;
+}
+
+void add_close_header(char *request, int *length, int max_length) {
+  int new_length = *length + 19;
+  if(max_length < new_length) {
+    return;
+  }
+  
+  memcpy(&request[*length-2], "Connection: close\r\n\r\n", 21); // copy over last \r\n
+  *length = new_length;
+}
+
+int file_put_contents(char *filename, char *content, int length) {
+  FILE* file = fopen(filename, "w");
+  
+  if(!file) {
+    printf("Error opening file %s.\n", filename);
     return -1;
   }
   
-  fgets(message, MAXSIZE, fichier);
-  return 1;
+  if(fwrite(content, sizeof(content[0]), length, file) != length) {
+    printf("Error writing file %s.\n", filename);
+    return -2;
+  }
   
+  fclose(file);
+  return 0;
 }
 
-
-
-char* cache_name(char* host, char* uri) {
-  int size = 0;
-  int i = 0;
+int file_get_contents(char *filename, char *content, int max_length) {
+  FILE* file = fopen(filename, "r");
+  int length = 0;
   
-  while(host[i] != '\0') {
-    
+  if(!file) {
+    printf("Error opening file %s.\n", filename);
+    return -1;
   }
+  
+  length = fread(content, sizeof(content[0]), max_length, file);
+  if(length <= 0) {
+    printf("Error reading file %s.\n", filename);
+    return -2;
+  }
+  
+  fclose(file);
+  return length;
+}
+// transform % to %25 (reversible) and / to %2F (forbidden) 
+char *cache_filename(char* host, char* uri) {
+  char *filename = 0;
+  int i, j, size = 0;
+  
+  for(i = 0; host[i] != 0; ++i) {
+    if(host[i] == '%' || host[i] == '/') {
+      size += 2;
+    }
+  }
+  size += i;
+  
+  for(i = 0; uri[i] != 0; ++i) {
+    if(uri[i] == '%' || uri[i] == '/') {
+      size += 2;
+    }
+  }
+  size += i;
+  
+  filename = malloc(sizeof(*filename) * (size+1));
+  filename[size] = 0;
+  
+  for(i = 0, j = 0; host[i] != 0; ++i, ++j) {
+    if(host[i] == '%') {
+      filename[j] = '%';
+      filename[j+1] = '2';
+      filename[j+2] = '5';
+      j += 2;
+    } else if(host[i] == '/') {
+      filename[j] = '%';
+      filename[j+1] = '2';
+      filename[j+2] = 'F';
+      j += 2;
+    } else {
+      filename[j] = host[i];
+    }
+  }
+  
+  for(i = 0; uri[i] != 0; ++i, ++j) {
+    if(uri[i] == '%') {
+      filename[j] = '%';
+      filename[j+1] = '2';
+      filename[j+2] = '5';
+      j += 2;
+    } else if(uri[i] == '/') {
+      filename[j] = '%';
+      filename[j+1] = '2';
+      filename[j+2] = 'F';
+      j += 2;
+    } else {
+      filename[j] = uri[i];
+    }
+  }
+  
+  return filename;
 }
 
 // Not working with gcc 4.8
@@ -97,33 +214,21 @@ char *regmatch(char *str_request, char *str_regex) {
 }
 
 int extract_first_request(char *requests, int *requests_size, char *request, int *request_size) {
-  int i;
-  *request_size = -1;
+  //*
+  requests[*requests_size] = 0;
+  *request_size = strpos(requests, "\r\n\r\n")+4;
+  //*/*request_size = mempos(requests, "\r\n\r\n", *requests_size)+4; // cause SEGFAULT on last call
   
-  for(i = 4; i < *requests_size; ++i) {
-    if(
-      requests[i-3] == '\r'
-      && requests[i-2] == '\n'
-      && requests[i-1] == '\r'
-      && requests[i] == '\n'
-    ) {
-      *request_size = i+1;
-      break;
-    }
-  }
-  
-  if(*request_size != -1) {
-    //request = malloc(sizeof(*request) * (*request_size));
-    for(i = 0; i < *request_size; i++) {
-      request[i] = requests[i];
-      if(i+*request_size < *requests_size) {
-        requests[i] = requests[i+*request_size];
-      }
-    }
+  if(*request_size != 3) {
+    memcpy(request, requests, *request_size);
+    
     *requests_size -= *request_size;
+    memmove(requests, &requests[*request_size], *requests_size);
+    
     return 0;
   }
   return -1;
+  //*/
 }
 
 char* extract_host(char* request, int length) {
@@ -262,5 +367,32 @@ char* extract_uri(char* request, int length) {
   }
   
   return uri;
+}
+
+int extract_http_code(char *response, int response_size) {
+  int code = 0;
+  if(response_size < 13) {
+    return code;
+  }
+  if(
+    (response[0] == 'h' || response[0] == 'H')
+    && (response[1] == 't' || response[1] == 'T')
+    && (response[2] == 't' || response[2] == 'T')
+    && (response[3] == 'p' || response[3] == 'P')
+    && response[4] == '/'
+    && (response[5] >= '0' && response[5] <= '9')
+    && response[6] == '.'
+    && (response[7] >= '0' && response[7] <= '9')
+    && response[8] == ' '
+    && (response[9] >= '0' && response[9] <= '9')
+    && (response[10] >= '0' && response[10] <= '9')
+    && (response[11] >= '0' && response[11] <= '9')
+    && response[12] == ' '
+  ) {
+    code += 100*(response[9] - '0');
+    code += 10*(response[10] - '0');
+    code += response[11] - '0';
+  }
+  return code;
 }
 
