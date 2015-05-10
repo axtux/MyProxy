@@ -126,6 +126,7 @@ int connection_handler(void *socket) {
                       printf("Got 304 but no cache file %s.\n", cache_file);
                     }
                   case 200: // OK / write to cache
+                    printf("Got 200, saving data to cache file %s.\n", cache_file);
                     file_put_contents(cache_file, response, response_size);
                   default:
                     /*
