@@ -2,7 +2,6 @@
 #define FUNCTIONS_H_INCLUDED
 
 #define MAXSIZE 256
-#define CACHE_PATH ./cache_files
 #define HTTP_TIME_LENGTH 29
 
 #include <stdio.h>
@@ -13,7 +12,6 @@
 #include <time.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-
 
 int get_int(char string[], int error);
 char* str_addr(struct sockaddr_in address);

@@ -128,9 +128,9 @@ int file_get_contents(char *filename, char *content, int max_length) {
   fclose(file);
   return length;
 }
-// transform % to %25 (reversible) and / to %2F (forbidden) 
+// transform % to %25 (reversible) and / to %2F (forbidden) and add CACHE_PATH
 char *cache_filename(char* host, char* uri) {
-  char *filename = 0;
+  char *CACHE_PATH = "./cache_files/", *filename = 0;
   int i, j, size = 0;
   
   for(i = 0; host[i] != 0; ++i) {
@@ -147,10 +147,12 @@ char *cache_filename(char* host, char* uri) {
   }
   size += i;
   
-  filename = malloc(sizeof(*filename) * (size+1));
+  j = strlen(CACHE_PATH);
+  filename = malloc(sizeof(*filename) * (j+size+1));
   filename[size] = 0;
+  memcpy(filename, CACHE_PATH, j);
   
-  for(i = 0, j = 0; host[i] != 0; ++i, ++j) {
+  for(i = 0; host[i] != 0; ++i, ++j) {
     if(host[i] == '%') {
       filename[j] = '%';
       filename[j+1] = '2';
