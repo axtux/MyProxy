@@ -35,29 +35,29 @@ A chaque nouvelle connexion d'un client, le serveur crée un nouveau thread. Ce 
 
 Un makefile a été crée pour compiler le serveur proxy et le client http avec la plus grande simplicité. La commande suivante compile le serveur et assure que le dossier `cache_files` où seront stockés les fichiers caches existe :
 ```bash
-make server
+$ make server
 ```
 La commande suivante compile le client HTTP :
 ```bash
-make client
+$ make client
 ```
 
 #Utilisation
 
 La commande suivante lance le serveur proxy :
 ```bash
-./server port
+$ ./server port
 ```
 - *port* : port réseau compris entre 0 et 65535 sur lequel le serveur proxy écoutera ; notez que les ports inférieurs à 1024 nécessitent les droits root sur Linux
 
 **Exemple** : pour que le serveur proxy écoute sur le port `8080`,  voici la commande :
 ```bash
-./server 8080
+$ ./server 8080
 ```
 
 La commande suivante lance le client HTTP :
 ```bash
-./client server port persistance pipelining uri1 [uri2 [uriN]]
+$ ./client server port persistance pipelining uri1 [uri2 [uriN]]
 ```
 - *server* : le serveur http à partir duquel les ressources devront être récupérées
 - *port* : le port d'écoute du serveur proxy local auquel le client enverra ses requêtes
@@ -67,7 +67,7 @@ La commande suivante lance le client HTTP :
 
 **Exemple** : pour se connecter au serveur proxy local écoutant sur le port `8080` et récupérer les ressources `/` et `/404` à partir du serveur `www.perdu.com`, en utilisant le `pipelining` sur une `connexion persistante`, voici la commande :
 ```bash
-./client www.perdu.com 8080 1 1 / /404
+$ ./client www.perdu.com 8080 1 1 / /404
 ```
 
 #Conclusion
